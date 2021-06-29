@@ -15,23 +15,27 @@ db.chain = _.chain(db.data)
 const users = db.chain.get('users').value()
 const oneUser = users[_.random(0, 19)]
 
-// Get the user's access for news
-const readNewsAccessRes = db.chain.get('rbac').filter((i) => {
-  let isTure = false
-  _.forEach(i.readGroups,(item) => {
-    isTure = _.includes(oneUser.groups, item)
+// Get the user's read access for news
+const readNewsAccessRes = db.chain.get('permission').filter((i) => {
+  let hasPermission = false
+  // Filtering permissions which have the user's roles in its reaRoles filed && the user is not in the bannedUser list
+  _.forEach(i.readRoles,(item) => {
+    hasPermission = _.includes(oneUser.roles, item) && !_.includes(item.bannedUsers, oneUser.id)
   })
-  return isTure
+  return hasPermission
 }).value()
 
-// Get news which are accessed
+console.log(readNewsAccessRes.length)
+
+
+// Get news which the user has the right to read
 const readNewsRes = db.chain.get('news').filter((i) => {
   return _.includes(_.map(readNewsAccessRes, (item) => {
-    return item.targetId
+    return item.target
   }), i.id)
 }).value()
 
-console.log(readNewsRes)
+console.log('readNewsRes', readNewsRes.length)
 
 // Search the fuzzy text in the targets
 const options = {
@@ -59,4 +63,4 @@ const fuse = new Fuse(readNewsRes, options)
 const pattern = 'porro'
 const searchRes = fuse.search(pattern)
 
-console.log(searchRes)
+console.log('searchRes', searchRes.length)
