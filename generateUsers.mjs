@@ -1,36 +1,21 @@
-import path from 'path'
-import { Low, JSONFile } from 'lowdb'
 import _ from 'lodash'
 import faker from 'faker'
-import {nanoid} from 'nanoid'
-
-const file = path.join(path.resolve(), 'db.json')
-const adapter = new JSONFile(file)
-const db = new Low(adapter)
-
-await db.read()
+import {roleDB, userDB} from './database.js'
+import {nanoid} from "nanoid";
 
 const arr = Array(20)
-const roleNames = ['Admin', 'HQ', 'Production', 'Design', 'Development']
 
-
-const { users, roles } = db.data
-
-for (const i of roleNames) {
-  roles.push({
-    id: nanoid(8),
-    name: i,
-  })
-}
-
+const {docs} = await roleDB.find({
+  selector: {}
+})
+console.log(docs)
 for (let i of arr) {
-  users.push({
+  userDB.post({
     id: nanoid(8),
     name: faker.name.findName(),
-    roles: [roles[_.random(0, 4)].id],
+    roles: [docs[_.random(0, 4)].id],
   })
 }
 
 
 
-await db.write()

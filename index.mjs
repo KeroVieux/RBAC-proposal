@@ -1,41 +1,49 @@
-import path from 'path'
-import { Low, JSONFile } from 'lowdb'
 import _ from 'lodash'
 import Fuse from 'fuse.js'
-
-const file = path.join(path.resolve(), 'db.json')
-const adapter = new JSONFile(file)
-const db = new Low(adapter)
-
-await db.read()
-
-db.chain = _.chain(db.data)
+import {userDB, newsDB, permissionDB} from './database.js'
 
 // Get the user info
-const users = db.chain.get('users').value()
-const oneUser = users[_.random(0, 19)]
+const userRes = await userDB.find({
+  selector: {},
+  limit: 1,
+  skip: _.random(0, 19)
+})
+const oneUser = userRes.docs[0]
+console.log('oneUser', oneUser)
 
 // Get the user's read access for news
-const readNewsAccessRes = db.chain.get('permission').filter((i) => {
-  let hasPermission = false
-  // Filtering permissions which have the user's roles in its reaRoles filed && the user is not in the bannedUser list
-  _.forEach(i.readRoles,(item) => {
-    hasPermission = _.includes(oneUser.roles, item) && !_.includes(item.bannedUsers, oneUser.id)
-  })
-  return hasPermission
-}).value()
+const readNewsAccessRes = await permissionDB.find({
+  selector: {
+    $and: [
+      {
+        readRoles: {
+          $in: oneUser.roles
+        }
+      },
+      {
+        bannedUsers: {
+          $nin: [oneUser.id]
+        }
+      }
+    ]
+  }
+})
 
-console.log(readNewsAccessRes.length)
+console.log('readNewsAccessRes', readNewsAccessRes.docs.length)
 
 
 // Get news which the user has the right to read
-const readNewsRes = db.chain.get('news').filter((i) => {
-  return _.includes(_.map(readNewsAccessRes, (item) => {
-    return item.target
-  }), i.id)
-}).value()
+const readNewsRes = await newsDB.find({
+  selector: {
+    id: {
+      $in: _.map(readNewsAccessRes.docs, (i) => {
+        return i.target
+      })
+    }
+  },
+})
 
-console.log('readNewsRes', readNewsRes.length)
+console.log('readNewsRes', readNewsRes.docs.length)
 
 // Search the fuzzy text in the targets
 const options = {
@@ -58,7 +66,7 @@ const options = {
   ]
 }
 
-const fuse = new Fuse(readNewsRes, options)
+const fuse = new Fuse(readNewsRes.docs, options)
 
 const pattern = 'porro'
 const searchRes = fuse.search(pattern)

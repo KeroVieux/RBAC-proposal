@@ -1,19 +1,15 @@
-import path from 'path'
-import { Low, JSONFile } from 'lowdb'
 import faker from 'faker'
 import {nanoid} from 'nanoid'
 import _ from "lodash";
-
-const file = path.join(path.resolve(), 'db.json')
-const adapter = new JSONFile(file)
-const db = new Low(adapter)
-
-await db.read()
+import {newsDB, roleDB, userDB, permissionDB} from './database.js'
 
 const arr = Array(20)
-
-
-const { news, users, roles, permission } = db.data
+const userRes = await userDB.find({
+  selector: {}
+})
+const roleRes = await roleDB.find({
+  selector: {}
+})
 
 for (let i of arr) {
   const newsId = nanoid(8)
@@ -28,12 +24,11 @@ for (let i of arr) {
     id: permissionId,
     target: newsPayload.id,
     tableName: 'news',
-    readRoles: [roles[_.random(0, 4)].id],
-    writeRoles: [roles[_.random(0, 4)].id],
-    bannedUsers: [users[_.random(0, 19)].id],
+    readRoles: [roleRes.docs[_.random(0, 4)].id],
+    writeRoles: [roleRes.docs[_.random(0, 4)].id],
+    bannedUsers: [userRes.docs[_.random(0, 19)].id],
   }
-  news.push(newsPayload)
-  permission.push(permissionPayload)
+  newsDB.post(newsPayload)
+  permissionDB.post(permissionPayload)
 }
 
-await db.write()

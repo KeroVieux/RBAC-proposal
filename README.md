@@ -8,10 +8,11 @@ Following the RBAC concept, I developed a demo to show you how to use it in a si
 
 ## How to run this demo
 1. `npm i` to install dependencies
-2. `node generateUsers.mjs` to generate users
-3. `node generateContent.mjs` to generate news and permissions
-4. `node index.mjs` to check the result
-5. Go into the index.mjs to see more details
+2. `node generateRoles.mjs` to generate roles
+3. `node generateUsers.mjs` to generate users
+4. `node generateContent.mjs` to generate news and permissions
+5. `node index.mjs` to check the result
+6. Go into the index.mjs to see more details
 
 ## In this demo what you can get
 ### Database setting
@@ -25,4 +26,4 @@ Following the RBAC concept, I developed a demo to show you how to use it in a si
 
 ## Limits
 It is a demo for the RBAC concept, when you understand it, then you can design your own proposal.
-It uses the lowdb to get the data, in your case, you should shift it to your database or RESTful to query the data.
+It uses the pouchDB to get the data, in your case, you should shift it to your database or RESTful to query the data.
